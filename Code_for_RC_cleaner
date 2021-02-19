@@ -1,0 +1,92 @@
+#define RC Serial
+#define F FORWARD
+#define B BACKWARD
+#include <Servo.h>
+#include <AFMotor.h>
+AF_DCMotor RW(1);
+AF_DCMotor LW(2);
+AF_DCMotor T(3);
+Servo Door;
+char cmd[100];
+int cmdIndex;
+bool flag;
+bool work;
+void command(){
+  if(cmd[0]=='m' && cmd[1]=='o' && cmd[2]=='t' && cmd[3]=='o'&& cmd[4]=='r' && cmd[5]==' '){
+    for(int i=6; cmd[i]!=0;i++){
+      val=val*10+int(cmd[i]-'0');
+    }
+    if(val>0){
+      RW.run(F);
+      LW.run(F);
+      RW.setSpeed(val);
+      LW.setSpeed(val);
+    }
+    if(val<0){
+      RW.run(B);
+      LW.run(B);
+   	  RW.setSpeed(-val);
+      LW.setSpeed(-val);
+    }
+    if(val==0){
+      RW.run(RELEASE);
+      LW.run(RELEASE);
+    }
+  }
+  if(cmd[0]=='s' && cmd[1]=='e' && cmd[2]=='r' && cmd[3]=='v'&& cmd[4]=='o' && cmd[5]==' '){
+    if(cmd[6]=='1' && flag==true){
+      flag=false;
+      Door.write(0);
+    }
+    else{
+       if(cmd[6]=='1' && flag==false){
+      flag=true;
+      Door.write(180);
+    }
+  }
+    if(cmd[0]=='t' && cmd[1]=='u'&& cmd[2]=='r'&&cmd[3]=='n'&&cmd[4]==' '){
+      if(cmd[5]=='r'){
+        RW.run(F);
+        LW.run(B);
+        RW.setSpeed(255);
+        LW.setSpeed(255);
+      }
+      if(cmd[5]=='l'){
+        RW.run(B);
+        LW.run(F);
+        RW.setSpeed(255);
+        LW.setSpeed(255);
+      }
+    }
+    if(cmd[0]=='t' && cmd[1]=='u'&&cmd[2]=='r'&&cmd[3]=='b'&&cmd[4]=='0'&&cmd[5]==' '){
+      if(cmd[6]=='1' && work==false){
+        work=true;
+        T.run(F);
+        T.setSpeed(255);
+      }
+      else{
+        if(cmd[6]==1 && work==true){
+          work=false;
+          T.run(RELEASE);
+        }
+      }
+    }
+}
+void setup() {
+Wheels.attach(12);
+Door.attach(13);
+RC.begin(9600);
+work=false;
+flag=true;
+cmdIndex=0;
+}
+void loop() {
+ if(RC.available()) {
+   char c = (char)RC.read();
+   if(c=='\r' || c=='\n') {
+     cmd[cmdIndex] = 0;
+     cmdIndex = 0;
+     command();
+   } else {      
+     cmd[cmdIndex++] = c;
+   }
